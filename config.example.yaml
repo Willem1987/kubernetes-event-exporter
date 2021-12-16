@@ -1,5 +1,6 @@
 logLevel: debug
 logFormat: json
+clusterName: a-cluster
 # namespace: my-namespace-only # Omitting it defaults to all namespaces.
 route:
   # Main route

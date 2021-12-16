@@ -67,7 +67,16 @@ func main() {
 	}
 
 	engine := exporter.NewEngine(&cfg, &exporter.ChannelBasedReceiverRegistry{})
-	w := kube.NewEventWatcher(kubeconfig, cfg.Namespace, cfg.ThrottlePeriod, engine.OnEvent)
+	onEvent := engine.OnEvent
+	if len(cfg.ClusterName) != 0 {
+		onEvent = func(event *kube.EnhancedEvent) {
+			// note that per code this value is not set anywhere on the kubernetes side
+			// https://github.com/kubernetes/apimachinery/blob/v0.22.4/pkg/apis/meta/v1/types.go#L276
+			event.ClusterName = cfg.ClusterName
+			engine.OnEvent(event)
+		}
+	}
+	w := kube.NewEventWatcher(kubeconfig, cfg.Namespace, cfg.ThrottlePeriod, onEvent)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	leaderLost := make(chan bool)
